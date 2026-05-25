@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A premium modern simple calculator with a stunning glassmorphism design and Python Flask backend.">
+  <title>GlassCalc - Modern Glassmorphic Calculator</title>
+  
+  <!-- Import Premium Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* --------------------------------------------------
+       1. DESIGN SYSTEM & ROOT VARIABLES (OKLCH PALETTE)
+       -------------------------------------------------- */
+    :root {
+      /* Color Tokens (Modern, rich, Harmonious OKLCH palette) */
+      --bg-dark: oklch(13% 0.015 240);
+      --card-bg: oklch(20% 0.025 240 / 0.45);
+      --card-border: oklch(100% 0 0 / 0.08);
+      --card-border-focus: oklch(75% 0.16 220 / 0.4);
+      
+      --text-main: oklch(98% 0.005 240);
+      --text-sub: oklch(75% 0.015 240);
+      --text-dim: oklch(50% 0.01 240);
+      
+      --glow-purple: oklch(55% 0.22 300);
+      --glow-cyan: oklch(70% 0.17 195);
+      
+      /* Button specific variables */
+      --btn-num-bg: oklch(25% 0.02 240 / 0.4);
+      --btn-num-hover: oklch(35% 0.025 240 / 0.5);
+      --btn-num-active: oklch(22% 0.02 240 / 0.6);
+      
+      --btn-op-bg: oklch(35% 0.08 240 / 0.35);
+      --btn-op-hover: oklch(45% 0.1 240 / 0.5);
+      --btn-op-active: oklch(30% 0.08 240 / 0.6);
+      --btn-op-text: oklch(78% 0.12 210);
+      
+      --btn-action-bg: oklch(35% 0.08 30 / 0.15);
+      --btn-action-hover: oklch(45% 0.12 30 / 0.3);
+      --btn-action-active: oklch(30% 0.08 30 / 0.4);
+      --btn-action-text: oklch(75% 0.12 40);
+      
+      --btn-equal-bg: linear-gradient(135deg, oklch(60% 0.2 300) 0%, oklch(68% 0.16 195) 100%);
+      --btn-equal-hover: linear-gradient(135deg, oklch(65% 0.22 300) 0%, oklch(73% 0.18 195) 100%);
+      --btn-equal-shadow: oklch(60% 0.2 300 / 0.35);
+      
+      /* Transitions */
+      --trans-fast: 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+      --trans-normal: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+      --trans-spring: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    /* --------------------------------------------------
+       2. GENERAL STYLE RESETS
+       -------------------------------------------------- */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    html, body {
+      height: 100%;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Outfit', sans-serif;
+      overflow: hidden;
+      font-size: 16px;
+    }
+    
+    /* --------------------------------------------------
+       3. BACKGROUND GLOW EFFECTS (ORBS & MOTION)
+       -------------------------------------------------- */
+    .background-container {
+      position: absolute;
+      inset: 0;
+      z-index: -10;
+      background: radial-gradient(circle at center, oklch(18% 0.02 240) 0%, var(--bg-dark) 100%);
+      overflow: hidden;
+    }
+    
+    .glow-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.45;
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+    
+    .glow-orb-1 {
+      top: -10%;
+      left: -10%;
+      width: clamp(300px, 45vw, 600px);
+      height: clamp(300px, 45vw, 600px);
+      background: radial-gradient(circle, var(--glow-purple) 0%, transparent 70%);
+      animation: float-orb-1 25s infinite ease-in-out alternate;
+    }
+    
+    .glow-orb-2 {
+      bottom: -15%;
+      right: -10%;
+      width: clamp(350px, 50vw, 700px);
+      height: clamp(350px, 50vw, 700px);
+      background: radial-gradient(circle, var(--glow-cyan) 0%, transparent 70%);
+      animation: float-orb-2 30s infinite ease-in-out alternate;
+    }
+    
+    @keyframes float-orb-1 {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(8%, 12%) scale(1.15); }
+    }
+    
+    @keyframes float-orb-2 {
+      0% { transform: translate(0, 0) scale(1.1); }
+      100% { transform: translate(-10%, -8%) scale(0.9); }
+    }
+    
+    /* --------------------------------------------------
+       4. LAYOUT DESIGN
+       -------------------------------------------------- */
+    main {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem;
+      position: relative;
+    }
+    
+    .app-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 390px;
+      height: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      animation: fade-in-up 0.8s var(--trans-spring);
+    }
+    
+    @keyframes fade-in-up {
+      0% { opacity: 0; transform: translateY(30px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Header branding */
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 0.5rem;
+    }
+    
+    .brand-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-family: 'Space Grotesk', sans-serif;
+      background: linear-gradient(to right, var(--text-main) 30%, oklch(75% 0.12 195) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .brand-title::before {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background-color: var(--glow-cyan);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--glow-cyan);
+    }
+    
+    .btn-toggle-history {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-sub);
+      padding: 0.5rem 0.85rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition: all var(--trans-fast);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    
+    .btn-toggle-history:hover {
+      background: var(--btn-num-hover);
+      color: var(--text-main);
+      border-color: var(--card-border-focus);
+      transform: translateY(-1px);
+    }
+    
+    .btn-toggle-history:active {
+      transform: translateY(1px);
+    }
+    
+    /* --------------------------------------------------
+       5. GLASSMORPHIC CALCULATOR CARD
+       -------------------------------------------------- */
+    .calculator-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(25px) saturate(180%);
+      -webkit-backdrop-filter: blur(25px) saturate(180%);
+      border: 1px solid var(--card-border);
+      border-radius: 32px;
+      padding: 1.5rem;
+      box-shadow: 
+        0 4px 30px rgba(0, 0, 0, 0.4),
+        inset 0 1px 1px oklch(100% 0 0 / 0.15),
+        0 0 40px oklch(55% 0.22 300 / 0.05);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      transition: border-color var(--trans-normal), box-shadow var(--trans-normal);
+    }
+    
+    .calculator-card:focus-within {
+      border-color: var(--card-border-focus);
+      box-shadow: 
+        0 4px 30px rgba(0, 0, 0, 0.4),
+        inset 0 1px 1px oklch(100% 0 0 / 0.2),
+        0 0 50px oklch(70% 0.17 195 / 0.08);
+    }
+    
+    /* Subtle inner reflection lines */
+    .calculator-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 32px;
+      pointer-events: none;
+      background: linear-gradient(135deg, oklch(100% 0 0 / 0.03) 0%, transparent 60%);
+    }
+    
+    /* --------------------------------------------------
+       6. THE DISPLAY PORT (DUAL LINE)
+       -------------------------------------------------- */
+    .display-container {
+      background: oklch(10% 0.015 240 / 0.35);
+      border-radius: 20px;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 0.35rem;
+      min-height: 110px;
+      border: 1px solid oklch(100% 0 0 / 0.04);
+      position: relative;
+    }
+    
+    /* Expression preview */
+    .display-expression {
+      font-size: 0.95rem;
+      color: var(--text-sub);
+      font-weight: 400;
+      letter-spacing: 0.05em;
+      min-height: 1.2rem;
+      max-width: 100%;
+      word-wrap: break-word;
+      word-break: break-all;
+      text-align: right;
+      font-family: 'Space Grotesk', sans-serif;
+      transition: all var(--trans-fast);
+      opacity: 0.85;
+    }
+    
+    /* Main input / result line */
+    .display-value {
+      font-size: clamp(2rem, 1.6rem + 2vw, 2.75rem);
+      font-weight: 600;
+      color: var(--text-main);
+      letter-spacing: -0.02em;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow-x: auto;
+      overflow-y: hidden;
+      text-align: right;
+      scrollbar-width: none; /* Hide scrollbar Firefox */
+      font-family: 'Outfit', sans-serif;
+      line-height: 1.2;
+    }
+    
+    .display-value::-webkit-scrollbar {
+      display: none; /* Hide scrollbar Webkit */
+    }
+    
+    /* --------------------------------------------------
+       7. KEYPAD AND GRID LAYOUT
+       -------------------------------------------------- */
+    .keypad-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+    }
+    
+    /* Calculator general buttons */
+    .btn {
+      aspect-ratio: 1 / 1;
+      border-radius: 20px;
+      border: 1px solid oklch(100% 0 0 / 0.05);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 600;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+      transition: 
+        background-color var(--trans-fast),
+        transform var(--trans-fast),
+        border-color var(--trans-fast),
+        box-shadow var(--trans-fast);
+      position: relative;
+      overflow: hidden;
+      outline: none;
+    }
+    
+    /* Focus State */
+    .btn:focus-visible {
+      outline: 2px solid var(--glow-cyan);
+      outline-offset: 3px;
+      border-color: var(--glow-cyan);
+    }
+    
+    /* Ripple-like press effect */
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: oklch(100% 0 0 / 0.1);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      border-radius: inherit;
+    }
+    
+    .btn:active::after {
+      opacity: 1;
+      transition: 0s;
+    }
+    
+    /* Micro-animations */
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+    
+    .btn:active {
+      transform: translateY(1px) scale(0.97);
+    }
+    
+    /* Number buttons styling */
+    .btn-num {
+      background: var(--btn-num-bg);
+      color: var(--text-main);
+    }
+    .btn-num:hover {
+      background: var(--btn-num-hover);
+      border-color: oklch(100% 0 0 / 0.12);
+    }
+    .btn-num:active {
+      background: var(--btn-num-active);
+    }
+    
+    /* Basic operator buttons styling (+ - * /) */
+    .btn-op {
+      background: var(--btn-op-bg);
+      color: var(--btn-op-text);
+      font-size: 1.5rem;
+    }
+    .btn-op:hover {
+      background: var(--btn-op-hover);
+      color: var(--text-main);
+      border-color: oklch(75% 0.16 220 / 0.25);
+    }
+    .btn-op:active {
+      background: var(--btn-op-active);
+    }
+    
+    /* Actions buttons (Clear, Backspace) */
+    .btn-action {
+      background: var(--btn-action-bg);
+      color: var(--btn-action-text);
+    }
+    .btn-action:hover {
+      background: var(--btn-action-hover);
+      color: oklch(85% 0.15 45);
+      border-color: oklch(75% 0.15 45 / 0.25);
+    }
+    .btn-action:active {
+      background: var(--btn-action-active);
+    }
+    
+    /* Double width button (Zero) */
+    .btn-zero {
+      grid-column: span 2;
+      aspect-ratio: auto;
+      height: 100%;
+    }
+    
+    /* Equal button styling */
+    .btn-equal {
+      background: var(--btn-equal-bg);
+      color: oklch(10% 0.01 240);
+      font-weight: 700;
+      font-size: 1.6rem;
+      border: none;
+      box-shadow: 0 4px 15px var(--btn-equal-shadow);
+      z-index: 1;
+    }
+    .btn-equal:hover {
+      background: var(--btn-equal-hover);
+      box-shadow: 0 6px 20px var(--btn-equal-shadow), 0 0 15px oklch(68% 0.16 195 / 0.4);
+      transform: translateY(-3px);
+    }
+    .btn-equal:active {
+      transform: translateY(1px) scale(0.97);
+      box-shadow: 0 2px 8px var(--btn-equal-shadow);
+    }
+    
+    /* Keyboard active state helper class (via JS) */
+    .btn-active-kb {
+      transform: translateY(1px) scale(0.97) !important;
+      background: oklch(100% 0 0 / 0.2) !important;
+    }
+    .btn-equal.btn-active-kb {
+      background: var(--btn-equal-hover) !important;
+      box-shadow: 0 2px 8px var(--btn-equal-shadow) !important;
+    }
+    
+    /* --------------------------------------------------
+       8. HISTORY PANEL (DRAWER OUTLAY)
+       -------------------------------------------------- */
+    .history-drawer {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      width: 100%;
+      max-width: 290px;
+      background: oklch(15% 0.02 240 / 0.92);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border-left: 1px solid var(--card-border);
+      border-radius: 0 32px 32px 0;
+      z-index: 20;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      transform: translateX(100%);
+      opacity: 0;
+      transition: transform var(--trans-normal), opacity var(--trans-normal);
+      pointer-events: none;
+    }
+    
+    .history-drawer.open {
+      transform: translateX(0);
+      opacity: 1;
+      pointer-events: all;
+    }
+    
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid oklch(100% 0 0 / 0.08);
+      padding-bottom: 0.75rem;
+    }
+    
+    .history-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    
+    .btn-clear-history {
+      background: transparent;
+      border: none;
+      color: var(--btn-action-text);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: color var(--trans-fast);
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    
+    .btn-clear-history:hover {
+      color: oklch(85% 0.15 45);
+      text-decoration: underline;
+    }
+    
+    .history-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      scrollbar-width: thin;
+      scrollbar-color: oklch(100% 0 0 / 0.15) transparent;
+      padding-right: 0.25rem;
+    }
+    
+    .history-item {
+      background: oklch(100% 0 0 / 0.03);
+      border: 1px solid oklch(100% 0 0 / 0.04);
+      padding: 0.75rem 1rem;
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.25rem;
+      cursor: pointer;
+      transition: background var(--trans-fast), border-color var(--trans-fast), transform var(--trans-fast);
+    }
+    
+    .history-item:hover {
+      background: oklch(100% 0 0 / 0.07);
+      border-color: oklch(100% 0 0 / 0.1);
+      transform: translateX(-2px);
+    }
+    
+    .history-item-exp {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      font-family: 'Space Grotesk', sans-serif;
+      text-align: right;
+      max-width: 100%;
+      word-wrap: break-word;
+    }
+    
+    .history-item-res {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--text-main);
+      text-shadow: 0 0 10px oklch(70% 0.17 195 / 0.1);
+    }
+    
+    .history-empty {
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      text-align: center;
+      margin-top: 2rem;
+      font-style: italic;
+    }
+    
+    /* --------------------------------------------------
+       9. RESPONSIVE DESIGN ADJUSTMENTS
+       -------------------------------------------------- */
+    @media (max-width: 420px) {
+      main {
+        padding: 0.75rem;
+      }
+      
+      .calculator-card {
+        border-radius: 24px;
+        padding: 1rem;
+      }
+      
+      .display-container {
+        padding: 1rem;
+      }
+      
+      .btn {
+        border-radius: 14px;
+        font-size: 1.25rem;
+      }
+      
+      .history-drawer {
+        max-width: 100%;
+        border-radius: 24px;
+      }
+    }
+    
+    /* --------------------------------------------------
+       10. UTILITY CLASSES & ACCESSIBILITY SCREEN READER
+       -------------------------------------------------- */
+    .visually-hidden {
+      position: absolute;
+      clip-path: inset(50%);
+      overflow: hidden;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      border: 0;
+      white-space: nowrap;
+    }
+    
+    .loading-shimmer {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .loading-shimmer::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; bottom: 0; left: 0;
+      transform: translateX(-100%);
+      background-image: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.08) 20%,
+        rgba(255, 255, 255, 0.15) 60%,
+        rgba(255, 255, 255, 0) 100%
+      );
+      animation: shimmer 1.5s infinite;
+    }
+    
+    @keyframes shimmer {
+      100% { transform: translateX(100%); }
+    }
+    
+    /* Alert styling for errors */
+    .error-flash {
+      animation: shake 0.4s ease;
+      color: oklch(65% 0.18 20) !important;
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background Orbs -->
+  <div class="background-container" aria-hidden="true">
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+  </div>
+
+  <main>
+    <div class="app-wrapper">
+      
+      <!-- Accessibility / Screen Reader Announcement Area -->
+      <div id="a11y-announcement" class="visually-hidden" aria-live="polite"></div>
+      
+      <!-- App Header -->
+      <header class="app-header">
+        <h1 class="brand-title">GlassCalc</h1>
+        <button type="button" class="btn-toggle-history" id="toggle-history" aria-expanded="false" aria-controls="history-sidebar" aria-label="Toggle calculation history">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+          History
+        </button>
+      </header>
+
+      <!-- Glass Calculator Card -->
+      <div class="calculator-card" id="calculator-shell">
+        
+        <!-- Display Screen -->
+        <div class="display-container" role="status" aria-live="polite">
+          <div class="display-expression" id="expr-preview" aria-label="Current expression"></div>
+          <div class="display-value" id="calc-display" aria-label="Calculator value">0</div>
+        </div>
+
+        <!-- Keypad Layout -->
+        <div class="keypad-grid" role="grid" aria-label="Calculator Keypad">
+          
+          <!-- Row 1 -->
+          <button type="button" class="btn btn-action" id="btn-clear" data-action="clear" aria-label="Clear all">C</button>
+          <button type="button" class="btn btn-action" id="btn-backspace" data-action="backspace" aria-label="Backspace">⌫</button>
+          <button type="button" class="btn btn-op" id="btn-percent" data-action="percent" aria-label="Percentage">%</button>
+          <button type="button" class="btn btn-op" id="btn-divide" data-op="divide" aria-label="Divide by">÷</button>
+          
+          <!-- Row 2 -->
+          <button type="button" class="btn btn-num" id="btn-7" data-num="7" aria-label="7">7</button>
+          <button type="button" class="btn btn-num" id="btn-8" data-num="8" aria-label="8">8</button>
+          <button type="button" class="btn btn-num" id="btn-9" data-num="9" aria-label="9">9</button>
+          <button type="button" class="btn btn-op" id="btn-multiply" data-op="multiply" aria-label="Multiply by">×</button>
+          
+          <!-- Row 3 -->
+          <button type="button" class="btn btn-num" id="btn-4" data-num="4" aria-label="4">4</button>
+          <button type="button" class="btn btn-num" id="btn-5" data-num="5" aria-label="5">5</button>
+          <button type="button" class="btn btn-num" id="btn-6" data-num="6" aria-label="6">6</button>
+          <button type="button" class="btn btn-op" id="btn-subtract" data-op="subtract" aria-label="Subtract">-</button>
+          
+          <!-- Row 4 -->
+          <button type="button" class="btn btn-num" id="btn-1" data-num="1" aria-label="1">1</button>
+          <button type="button" class="btn btn-num" id="btn-2" data-num="2" aria-label="2">2</button>
+          <button type="button" class="btn btn-num" id="btn-3" data-num="3" aria-label="3">3</button>
+          <button type="button" class="btn btn-op" id="btn-add" data-op="add" aria-label="Add">+</button>
+          
+          <!-- Row 5 -->
+          <button type="button" class="btn btn-num btn-zero" id="btn-0" data-num="0" aria-label="0">0</button>
+          <button type="button" class="btn btn-num" id="btn-decimal" data-action="decimal" aria-label="Decimal point">.</button>
+          <button type="button" class="btn btn-equal" id="btn-equal" aria-label="Equals (Calculate)">=</button>
+          
+        </div>
+
+        <!-- History Drawer inside the Calculator Shell boundary for responsive containment -->
+        <aside class="history-sidebar history-drawer" id="history-sidebar" aria-label="Calculation History">
+          <div class="history-header">
+            <h2 class="history-title">History</h2>
+            <button type="button" class="btn-clear-history" id="clear-history" aria-label="Clear all calculation history">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              Clear
+            </button>
+          </div>
+          <div class="history-list" id="history-list">
+            <!-- Items generated dynamically -->
+          </div>
+        </aside>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- --------------------------------------------------
+       11. CLIENT INTERACTIVE CALCULATOR LOGIC & AJAX
+       -------------------------------------------------- -->
+  <script>
+    // Constants & State
+    const displayElement = document.getElementById('calc-display');
+    const exprPreviewElement = document.getElementById('expr-preview');
+    const historyListElement = document.getElementById('history-list');
+    const toggleHistoryBtn = document.getElementById('toggle-history');
+    const historySidebar = document.getElementById('history-sidebar');
+    const clearHistoryBtn = document.getElementById('clear-history');
+    const shellElement = document.getElementById('calculator-shell');
+    const a11yAnnouncer = document.getElementById('a11y-announcement');
+    
+    // Core Calculator State variables
+    let currentInput = "0";
+    let firstOperand = null;
+    let pendingOperator = null; // 'add', 'subtract', 'multiply', 'divide'
+    let isAwaitingSecondOperand = false;
+    let history = [];
+
+    // Map operator representations
+    const opSymbols = {
+      'add': '+',
+      'subtract': '-',
+      'multiply': '×',
+      'divide': '÷'
+    };
+
+    // Load History from LocalStorage
+    function loadHistory() {
+      try {
+        const stored = localStorage.getItem('glasscalc_history');
+        if (stored) {
+          history = JSON.parse(stored);
+        }
+      } catch (e) {
+        console.error('Failed to load history', e);
+      }
+      renderHistory();
+    }
+
+    // Save History to LocalStorage
+    function saveHistory() {
+      try {
+        localStorage.setItem('glasscalc_history', JSON.stringify(history));
+      } catch (e) {
+        console.error('Failed to save history', e);
+      }
+      renderHistory();
+    }
+
+    // Render History DOM Elements
+    function renderHistory() {
+      if (history.length === 0) {
+        historyListElement.innerHTML = `<div class="history-empty">No calculations yet</div>`;
+        return;
+      }
+
+      historyListElement.innerHTML = '';
+      history.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.setAttribute('role', 'button');
+        div.setAttribute('tabindex', '0');
+        div.setAttribute('aria-label', `Equation: ${item.num1} ${item.symbol} ${item.num2} equals ${item.result}`);
+        
+        div.innerHTML = `
+          <div class="history-item-exp">${item.num1} ${item.symbol} ${item.num2} =</div>
+          <div class="history-item-res">${item.result}</div>
+        `;
+        
+        // Let user load a historical value back into the calculator on click or keypress
+        const loadItem = () => {
+          currentInput = item.result.toString();
+          firstOperand = null;
+          pendingOperator = null;
+          isAwaitingSecondOperand = false;
+          updateDisplay();
+          announceToScreenReader(`Loaded result ${item.result} from history`);
+          
+          // Optionally auto-close history on mobile
+          if (window.innerWidth <= 420) {
+            toggleHistory(false);
+          }
+        };
+
+        div.addEventListener('click', loadItem);
+        div.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            loadItem();
+          }
+        });
+
+        historyListElement.appendChild(div);
+      });
+    }
+
+    // Announce values dynamically to screen readers
+    function announceToScreenReader(message) {
+      a11yAnnouncer.textContent = message;
+    }
+
+    // Display Updater
+    function updateDisplay() {
+      displayElement.textContent = currentInput;
+      
+      // Update the formula preview line
+      if (pendingOperator !== null && firstOperand !== null) {
+        exprPreviewElement.textContent = `${firstOperand} ${opSymbols[pendingOperator]}`;
+      } else {
+        exprPreviewElement.textContent = '';
+      }
+    }
+
+    // Display Error Alert with animation
+    function triggerDisplayError(message) {
+      currentInput = "Error";
+      updateDisplay();
+      displayElement.textContent = message;
+      displayElement.classList.add('error-flash');
+      announceToScreenReader(`Error: ${message}`);
+      
+      setTimeout(() => {
+        displayElement.classList.remove('error-flash');
+      }, 400);
+
+      // Reset state so user can clear easily
+      firstOperand = null;
+      pendingOperator = null;
+      isAwaitingSecondOperand = false;
+    }
+
+    // Input handlers
+    function handleNumber(num) {
+      if (isAwaitingSecondOperand) {
+        currentInput = num;
+        isAwaitingSecondOperand = false;
+      } else {
+        if (currentInput === "0" || currentInput === "Error") {
+          currentInput = num;
+        } else {
+          // Prevent too long inputs to preserve layout sizing
+          if (currentInput.length < 15) {
+            currentInput += num;
+          }
+        }
+      }
+      updateDisplay();
+      announceToScreenReader(currentInput);
+    }
+
+    function handleDecimal() {
+      if (isAwaitingSecondOperand) {
+        currentInput = "0.";
+        isAwaitingSecondOperand = false;
+        updateDisplay();
+        return;
+      }
+
+      if (!currentInput.includes('.')) {
+        if (currentInput === "Error" || currentInput === "0") {
+          currentInput = "0.";
+        } else {
+          currentInput += ".";
+        }
+        updateDisplay();
+        announceToScreenReader(currentInput);
+      }
+    }
+
+    // Clears all states
+    function handleClear() {
+      currentInput = "0";
+      firstOperand = null;
+      pendingOperator = null;
+      isAwaitingSecondOperand = false;
+      updateDisplay();
+      announceToScreenReader("Calculator cleared");
+    }
+
+    // Removes one character from right
+    function handleBackspace() {
+      if (isAwaitingSecondOperand || currentInput === "Error") {
+        return;
+      }
+      if (currentInput.length > 1) {
+        currentInput = currentInput.slice(0, -1);
+      } else {
+        currentInput = "0";
+      }
+      updateDisplay();
+      announceToScreenReader(currentInput);
+    }
+
+    // Handles percentages directly client-side
+    function handlePercent() {
+      if (currentInput === "Error") return;
+      const val = parseFloat(currentInput);
+      if (!isNaN(val)) {
+        currentInput = (val / 100).toString();
+        updateDisplay();
+        announceToScreenReader(`${currentInput}`);
+      }
+    }
+
+    // Operator triggers
+    async function handleOperator(nextOperator) {
+      const inputValue = parseFloat(currentInput);
+
+      if (inputValue === "Error" || isNaN(inputValue)) {
+        return;
+      }
+
+      // If operator already exists and we are expecting a second operand, 
+      // let the user change operator instead of running calculation
+      if (pendingOperator && isAwaitingSecondOperand) {
+        pendingOperator = nextOperator;
+        updateDisplay();
+        return;
+      }
+
+      if (firstOperand === null) {
+        firstOperand = inputValue;
+      } else if (pendingOperator) {
+        // Run intermediate calculations to behave like a standard pocket calculator
+        const success = await performCalculation();
+        if (!success) return; // calculation failed
+        firstOperand = parseFloat(currentInput);
+      }
+
+      pendingOperator = nextOperator;
+      isAwaitingSecondOperand = true;
+      updateDisplay();
+      announceToScreenReader(`Operator set to ${opSymbols[nextOperator]}`);
+    }
+
+    // Trigger math AJAX post to server
+    async function performCalculation() {
+      if (firstOperand === null || pendingOperator === null) {
+        return false;
+      }
+
+      const secondOperand = parseFloat(currentInput);
+      if (isNaN(secondOperand)) {
+        return false;
+      }
+
+      // Add a clean shimmering loading state to visual cue calculation speed
+      displayElement.classList.add('loading-shimmer');
+      announceToScreenReader("Calculating...");
+
+      try {
+        const response = await fetch('/calculate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            num1: firstOperand,
+            num2: secondOperand,
+            operation: pendingOperator
+          })
+        });
+
+        const data = await response.json();
+        displayElement.classList.remove('loading-shimmer');
+
+        if (response.ok) {
+          const result = data.result;
+          
+          // Log calculation item in history state
+          const historyItem = {
+            num1: firstOperand,
+            num2: secondOperand,
+            symbol: opSymbols[pendingOperator],
+            operation: pendingOperator,
+            result: result
+          };
+          
+          history.unshift(historyItem);
+          if (history.length > 25) {
+            history.pop(); // Keep history reasonable
+          }
+          saveHistory();
+
+          // Update main display
+          currentInput = result.toString();
+          
+          // Clear intermediate equation trackers
+          const announcedText = `${firstOperand} ${opSymbols[pendingOperator]} ${secondOperand} equals ${result}`;
+          firstOperand = null;
+          pendingOperator = null;
+          isAwaitingSecondOperand = false;
+          
+          updateDisplay();
+          announceToScreenReader(announcedText);
+          return true;
+        } else {
+          triggerDisplayError(data.error || "Error");
+          return false;
+        }
+      } catch (err) {
+        displayElement.classList.remove('loading-shimmer');
+        triggerDisplayError("Connection Error");
+        return false;
+      }
+    }
+
+    // Drawer toggling logic
+    function toggleHistory(forcedState) {
+      const isOpen = forcedState !== undefined ? forcedState : !historySidebar.classList.contains('open');
+      
+      if (isOpen) {
+        historySidebar.classList.add('open');
+        toggleHistoryBtn.setAttribute('aria-expanded', 'true');
+        toggleHistoryBtn.innerHTML = `
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Close
+        `;
+        announceToScreenReader("History panel opened");
+      } else {
+        historySidebar.classList.remove('open');
+        toggleHistoryBtn.setAttribute('aria-expanded', 'false');
+        toggleHistoryBtn.innerHTML = `
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+          History
+        `;
+        announceToScreenReader("History panel closed");
+      }
+    }
+
+    // --------------------------------------------------
+    // 12. BIND DOM CLICK EVENTS
+    // --------------------------------------------------
+    
+    // Numbers clicks
+    document.querySelectorAll('[data-num]').forEach(button => {
+      button.addEventListener('click', () => {
+        handleNumber(button.getAttribute('data-num'));
+      });
+    });
+
+    // Operators clicks
+    document.querySelectorAll('[data-op]').forEach(button => {
+      button.addEventListener('click', () => {
+        handleOperator(button.getAttribute('data-op'));
+      });
+    });
+
+    // Action clicks
+    document.getElementById('btn-clear').addEventListener('click', handleClear);
+    document.getElementById('btn-backspace').addEventListener('click', handleBackspace);
+    document.getElementById('btn-percent').addEventListener('click', handlePercent);
+    document.getElementById('btn-decimal').addEventListener('click', handleDecimal);
+    
+    // Equal click
+    document.getElementById('btn-equal').addEventListener('click', async () => {
+      if (pendingOperator && !isAwaitingSecondOperand) {
+        await performCalculation();
+      }
+    });
+
+    // Toggle History Drawer click
+    toggleHistoryBtn.addEventListener('click', () => toggleHistory());
+
+    // Clear History Button click
+    clearHistoryBtn.addEventListener('click', () => {
+      history = [];
+      saveHistory();
+      announceToScreenReader("Calculation history cleared");
+    });
+
+    // Close history on clicking outside of drawer on main container
+    document.addEventListener('click', (e) => {
+      if (historySidebar.classList.contains('open')) {
+        const isClickInsideSidebar = historySidebar.contains(e.target);
+        const isClickToggle = toggleHistoryBtn.contains(e.target);
+        
+        if (!isClickInsideSidebar && !isClickToggle) {
+          toggleHistory(false);
+        }
+      }
+    });
+
+    // --------------------------------------------------
+    // 13. ROBUST PHYSICAL KEYBOARD LISTENERS & AESTHETIC VISUAL FEEDBACK
+    // --------------------------------------------------
+    
+    // Keep dictionary of key mappings to HTML Element ID
+    const keyMap = {
+      '0': 'btn-0',
+      '1': 'btn-1',
+      '2': 'btn-2',
+      '3': 'btn-3',
+      '4': 'btn-4',
+      '5': 'btn-5',
+      '6': 'btn-6',
+      '7': 'btn-7',
+      '8': 'btn-8',
+      '9': 'btn-9',
+      '.': 'btn-decimal',
+      '+': 'btn-add',
+      '-': 'btn-subtract',
+      '*': 'btn-multiply',
+      'x': 'btn-multiply',
+      'X': 'btn-multiply',
+      '/': 'btn-divide',
+      '%': 'btn-percent',
+      'Enter': 'btn-equal',
+      '=': 'btn-equal',
+      'Backspace': 'btn-backspace',
+      'Escape': 'btn-clear',
+      'c': 'btn-clear',
+      'C': 'btn-clear'
+    };
+
+    window.addEventListener('keydown', async (e) => {
+      // Avoid intercepting browser keys if user is focusing history drawer links or buttons
+      if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      const buttonId = keyMap[e.key];
+      if (buttonId) {
+        e.preventDefault();
+        const button = document.getElementById(buttonId);
+        if (button) {
+          // Trigger visual active feedback
+          button.classList.add('btn-active-kb');
+          setTimeout(() => button.classList.remove('btn-active-kb'), 120);
+
+          // Invoke correct handler matching button type
+          if (button.hasAttribute('data-num')) {
+            handleNumber(button.getAttribute('data-num'));
+          } else if (button.hasAttribute('data-op')) {
+            handleOperator(button.getAttribute('data-op'));
+          } else {
+            const action = button.getAttribute('data-action');
+            if (action === 'clear') handleClear();
+            else if (action === 'backspace') handleBackspace();
+            else if (action === 'percent') handlePercent();
+            else if (action === 'decimal') handleDecimal();
+            else if (button.id === 'btn-equal') {
+              if (pendingOperator && !isAwaitingSecondOperand) {
+                await performCalculation();
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Initialize application on load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadHistory();
+      updateDisplay();
+    });
+  </script>
+</body>
+</html>
