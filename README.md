@@ -1,5 +1,8 @@
 # Spec Driven Development (SDD) Implementation
 
+![image](https://github.com/user/repo/assets/...)<img width="1280" height="633" alt="Screenshot 2026-05-25 at 8 33 03 PM" src="https://github.com/user-attachments/assets/6c961667-542e-457d-b905-108a99a5d876" />
+
+
 This branch contains the simple calculator built utilizing **Spec Driven Development (SDD)** with the `openspec` CLI and an integrated AI IDE agent.
 
 ## What is Spec Driven Development?
