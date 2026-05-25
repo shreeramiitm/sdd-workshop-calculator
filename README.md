@@ -1,5 +1,8 @@
 # Vibe Coding Implementation: Simple Calculator
 
+![image](https://github.com/user/repo/assets/...)<img width="1280" height="677" alt="Screenshot 2026-05-25 at 8 45 50 PM" src="https://github.com/user-attachments/assets/f89b06f9-f680-4c67-8e2a-0b04ca10e2c6" />
+
+
 This branch contains the simple calculator built using the **Vibe Coding** methodology.
 
 ## What is Vibe Coding?
